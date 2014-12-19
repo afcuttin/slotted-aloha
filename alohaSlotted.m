@@ -14,10 +14,22 @@ acknowledge=0; % contatore dei pacchetti confermati
 collision=0; % contatore delle collisioni
 delays=[]; % vettore dei ritardi
 
-sim_time=100000; % durata simulazione, in slot
+sim_time=10000; % durata simulazione, in slot
 now=0; % istante corrente
 
-while now<=sim_time
+h = waitbar(0,'Generating traffic...','CreateCancelBtn','setappdata(gcbf,''canceling'',1)'); % finestra con barra di avanzamento
+
+setappdata(h,'canceling',0)
+
+while now<sim_time
+
+    if getappdata(h,'canceling')
+        delete(h);
+        fprintf('Warning: terminated by user!\n');
+        break
+    end
+
+    waitbar(now / sim_time,h,sprintf('Packets sent: %u; packests acknowledged: %u.',attempt,acknowledge));
     
     for i=1:length(source)
         if source(1,i)==0 & rand(1)<=tx_threshold % esperimento casuale: se la sorgente è idle e se vero, la sorgente trasmette
@@ -30,8 +42,8 @@ while now<=sim_time
     end
     
 %    disp('nuove trasmissioni')
-    source
-    backoff
+%    source
+%    backoff
     
     attempt=attempt+sum(source==1);
     
@@ -39,11 +51,11 @@ while now<=sim_time
         acknowledge=acknowledge+1; % il pacchetto è trasmesso e riceve acknowledge
         [a,b]=find(source==1); % trova la posizione b della sorgente che trasmette per poter determinare il ritardo dovuto alle collisioni
         delays(acknowledge)=now-generated(b); % calcola il ritardo e lo mette in un vettore man mano che i pacchetti vengono confermati
-        fprintf('Acknowledge: %u \n',acknowledge);    
+%        fprintf('Acknowledge: %u \n',acknowledge);    
     elseif sum(source==1)>1 % c'è collisione
         collision=collision+1;
         source=source+backoff;
-        fprintf('Collisioni: %u \n',collision);    
+%        fprintf('Collisioni: %u \n',collision);    
     end
     
     for j=1:length(source)
@@ -52,14 +64,18 @@ while now<=sim_time
         end
     end
     
-    source
-    pause('on');
-    pause;
-    now=now+1 % avanza di uno slot
+%    source
+%    pause('on');
+%    pause;
+    now=now+1; % avanza di uno slot
     backoff=zeros(1,N); % inizializzazione del vettore di backoff prima del nuovo slot
+end
+
+if now==sim_time
+    delete(h);
 end
 
 D=mean(delays); % calcola il ritardo medio in slots
 G=attempt/now;  % calcola il traffico in ingresso, ritrasmissioni incluse
 S=acknowledge/now;
-fprintf('D: %.2f, G: %.2f, S: %.3f\n',D,G,S);
+fprintf('Mean delay (D): %.2f slots,\nTraffic offered (G): %.3f,\nThroughput (S): %.3f\n',D,G,S);
