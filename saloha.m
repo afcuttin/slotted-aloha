@@ -1,27 +1,27 @@
-clear all
+function [throughput,meanDelay,trafficOffered] = saloha(sourcesNumber,txProbability,maxBackoff,simulationTime,showProgressBar)
+% clear all
 
-N=100; % numero di sorgenti
+% sourcesNumber=100; % numero di sorgenti
 
-max_backoff=100; % intervallo massimo di backoff in slots
-tx_threshold=0.005; % parametro per l'esperimento casuale che decide se una sorgente trasmette o meno
+% maxBackoff=100; % intervallo massimo di backoff in slots
+% txProbability=0.005; % parametro per l'esperimento casuale che decide se una sorgente trasmette o meno
 
-
-source=zeros(1,N); % inizializzazione sorgenti: all'inizio sono tutte vuote
-backoff=zeros(1,N); % inizializzazione vettore intervalli backoff
+source=zeros(1,sourcesNumber); % inizializzazione sorgenti: all'inizio sono tutte vuote
+backoff=zeros(1,sourcesNumber); % inizializzazione vettore intervalli backoff
 
 attempt=0; % contatore dei tentativi di trasmissione (sorgente con pacchetto pronto a un certo istante)
 acknowledge=0; % contatore dei pacchetti confermati
 collision=0; % contatore delle collisioni
 delays=[]; % vettore dei ritardi
 
-sim_time=10000; % durata simulazione, in slot
-now=0; % istante corrente
+% simulationTime = 10000; % durata simulazione, in slot
+now = 0; % istante corrente
 
 h = waitbar(0,'Generating traffic...','CreateCancelBtn','setappdata(gcbf,''canceling'',1)'); % finestra con barra di avanzamento
 
 setappdata(h,'canceling',0)
 
-while now<sim_time
+while now<simulationTime
 
     if getappdata(h,'canceling')
         delete(h);
@@ -29,15 +29,15 @@ while now<sim_time
         break
     end
 
-    waitbar(now / sim_time,h,sprintf('Packets sent: %u; packests acknowledged: %u.',attempt,acknowledge));
+    waitbar(now / simulationTime,h,sprintf('Packets sent: %u; packests acknowledged: %u.',attempt,acknowledge));
     
     for i=1:length(source)
-        if source(1,i)==0 & rand(1)<=tx_threshold % esperimento casuale: se la sorgente è idle e se vero, la sorgente trasmette
-            source(1,i)=1; % sorgente pronta a trasmettere
-            backoff(1,i)=randi(max_backoff,1); % genera eventuale intervallo di backoff in caso di collisione
+        if source(1,i)==0 & rand(1)<=txProbability % esperimento casuale: se la sorgente è idle e se vero, la sorgente trasmette
+            source(1,i)=1; % sorgente pronta a trasmttere
+            backoff(1,i)=randi(maxBackoff,1); % genera eventuale intervallo di backoff in caso di collisione
             generated(1,i)=now; % prendi nota di quando il pacchetto era pronto per calcolare il ritardo
         elseif source(1,i)==1 % era backlogged e ha aspettato il suo turno (non si può integrare nella condizione precedente, perché altrimenti si perde l'informazione sul ritardo (a generated(,i) viene assegnato un nuovo valore)
-            backoff(1,i)=randi(max_backoff,1); % genera eventuale intervallo di backoff in caso di collisione
+            backoff(1,i)=randi(maxBackoff,1); % genera eventuale intervallo di backoff in caso di collisione
         end
     end
     
@@ -68,14 +68,14 @@ while now<sim_time
 %    pause('on');
 %    pause;
     now=now+1; % avanza di uno slot
-    backoff=zeros(1,N); % inizializzazione del vettore di backoff prima del nuovo slot
+    backoff=zeros(1,sourcesNumber); % inizializzazione del vettore di backoff prima del nuovo slot
 end
 
-if now==sim_time
+if now==simulationTime
     delete(h);
 end
 
-D=mean(delays); % calcola il ritardo medio in slots
-G=attempt/now;  % calcola il traffico in ingresso, ritrasmissioni incluse
-S=acknowledge/now;
-fprintf('Mean delay (D): %.2f slots,\nTraffic offered (G): %.3f,\nThroughput (S): %.3f\n',D,G,S);
+trafficOffered=attempt/now;  % calcola il traffico in ingresso, ritrasmissioni incluse
+meanDelay=mean(delays); % calcola il ritardo medio in slots
+throughput=acknowledge/now;
+% fprintf('Mean delay (D): %.2f slots,\nTraffic offered (G): %.3f,\nThroughput (S): %.3f\n',D,G,S);
