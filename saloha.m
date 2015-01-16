@@ -1,13 +1,39 @@
 function [throughput,meanDelay,trafficOffered,pcktCollisionProb] = saloha(sourceNumber,packetReadyProb,maxBackoff,simulationTime,showProgressBar,niceOutput)
+% function [throughput,mean delay,traffic offered,packet collision probability]
+%    = saloha(source number,packet ready probability, maximum backoff,simulation time,
+%      show progress bar,nice output)
 %
-% write help here
+% +++ Function input parameters
 %
-% showProgressBar (optional): if true, a progress bar showing the
-%        simulation advance will be displayed. Default behaviour is
-%        showProgressBar = false for faster simulations.
+% source number (positive integer): the number of sources that generate packets.
 %
-% niceOutput (optional): if true, prints out the function outputs
-%        Default behaviour is niceOutput = false.
+% packet ready probability (real, [0,1]): the probability that a given source has
+%        a packet ready to be transmitted at any given time slot.
+%
+% maximum backoff (positive integer): the maximum backoff value that a backlogged
+%        source must wait before a new transmission attempt.
+%
+% simulation time (positive integer): the duration of the simulation in time slots.
+%
+% show progress bar (optional): if true, a progress bar showing the simulation
+%        advance will be displayed. Default behaviour is showProgressBar = false
+%        for faster simulations.
+%
+% nice output (optional): if true, prints out the function outputs. Default
+%        behaviour is niceOutput = false.
+%
+% +++ Function outputs
+%
+% throughput: normalized throughput of the slotted aloha random access protocol
+%
+% mean delay: the average delay (in slots) for a packet to be successfully
+%        transmitted (acknowledge) from the moment it is ready at the source
+%
+% traffic offered: normalized traffic offered to the system,including
+%        retransmissions
+%
+% packet collision probability: probability that a packet collides with others
+%        at any given time slot
 
 sourceStatus = zeros(1,sourceNumber);
 % legit source statuses are always non-negative integers and equal to:
@@ -18,7 +44,7 @@ sourceBackoff = zeros(1,sourceNumber);
 pcktTransmissionAttempts = 0;
 ackdPacketDelay = [];
 ackdPacketCount = 0;
-pcktCollisionCount = 0; % this is not an output of the function. deletable?
+pcktCollisionCount = 0;
 currentSlot = 0;
 
 if exist('showProgressBar','var') & showProgressBar == 1
@@ -35,7 +61,7 @@ while currentSlot < simulationTime
     if showProgressBar == 1
         if getappdata(progressBar,'canceling')
             delete(progressBar);
-            fprintf('Warning: terminated by user!\n');
+            fprintf('\nWarning: terminated by user!\n');
             break
         end
         waitbar(currentSlot / simulationTime,progressBar,sprintf('Packets sent: %u; packets acknowledged: %u.',pcktTransmissionAttempts,ackdPacketCount));
@@ -55,10 +81,10 @@ while currentSlot < simulationTime
 
     if sum(sourceStatus == 1) == 1
         ackdPacketCount = ackdPacketCount + 1;
-        [dummy,sourceId] = find(sourceStatus == 1); % trova la posizione sourceId della sorgente che trasmette per poter determinare il ritardo dovuto alle collisioni
+        [dummy,sourceId] = find(sourceStatus == 1);
         ackdPacketDelay(ackdPacketCount) = currentSlot - pcktGenerationTimestamp(sourceId);
     elseif sum(sourceStatus == 1) > 1
-        pcktCollisionCount = pcktCollisionCount + 1; % this is not an output of the function. deletable?
+        pcktCollisionCount = pcktCollisionCount + 1;
         sourceStatus  = sourceStatus + sourceBackoff;
     end
 
@@ -68,14 +94,14 @@ while currentSlot < simulationTime
         end
     end
 
-    sourceBackoff = zeros(1,sourceNumber); % inizializzazione del vettore di sourceBackoff prima del nuovo slot
+    sourceBackoff = zeros(1,sourceNumber);
 end
 
 if currentSlot==simulationTime & showProgressBar == 1
     delete(progressBar);
 end
 
-trafficOffered = pcktTransmissionAttempts / currentSlot;  % calcola il traffico in ingresso, ritrasmissioni incluse
+trafficOffered = pcktTransmissionAttempts / currentSlot;
 meanDelay = mean(ackdPacketDelay);
 throughput = ackdPacketCount / currentSlot;
 pcktCollisionProb = pcktCollisionCount / currentSlot;
