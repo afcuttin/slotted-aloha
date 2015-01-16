@@ -1,4 +1,4 @@
-function [throughput,meanDelay,trafficOffered] = saloha(sourcesNumber,packetReadyProb,maxBackoff,simulationTime,showProgressBar)
+function [throughput,meanDelay,trafficOffered,pcktCollisionProb] = saloha(sourcesNumber,packetReadyProb,maxBackoff,simulationTime,showProgressBar)
 % write help here
 
 sourceStatus = zeros(1,sourcesNumber);
@@ -17,7 +17,7 @@ h = waitbar(0,'Generating traffic...','CreateCancelBtn','setappdata(gcbf,''cance
 setappdata(h,'canceling',0)
 
 while currentSlot < simulationTime
-    currentSlot = currentSlot + 1;    
+    currentSlot = currentSlot + 1;
 
     if getappdata(h,'canceling')
         delete(h);
@@ -25,7 +25,7 @@ while currentSlot < simulationTime
         break
     end
     waitbar(currentSlot / simulationTime,h,sprintf('Packets sent: %u; packets acknowledged: %u.',pcktTransmissionAttempts,ackdPacketCount));
-    
+
     for eachSource1 = 1:length(sourceStatus)
         if sourceStatus(1,eachSource1) == 0 & rand(1) <= packetReadyProb % new packet
             sourceStatus(1,eachSource1) = 1;
@@ -37,12 +37,12 @@ while currentSlot < simulationTime
     end
 
     pcktTransmissionAttempts = pcktTransmissionAttempts + sum(sourceStatus == 1);
-     
-    if sum(sourceStatus == 1) == 1 
-        ackdPacketCount = ackdPacketCount + 1; 
+
+    if sum(sourceStatus == 1) == 1
+        ackdPacketCount = ackdPacketCount + 1;
         [dummy,sourceId] = find(sourceStatus == 1); % trova la posizione sourceId della sorgente che trasmette per poter determinare il ritardo dovuto alle collisioni
-        ackdPacketDelay(ackdPacketCount) = currentSlot - pcktGenerationTimestamp(sourceId); 
-    elseif sum(sourceStatus == 1) > 1 
+        ackdPacketDelay(ackdPacketCount) = currentSlot - pcktGenerationTimestamp(sourceId);
+    elseif sum(sourceStatus == 1) > 1
         pcktCollisionCount = pcktCollisionCount + 1; % this is not an output of the function. deletable?
         sourceStatus  = sourceStatus + sourceBackoff;
     end
@@ -61,5 +61,6 @@ if currentSlot==simulationTime
 end
 
 trafficOffered = pcktTransmissionAttempts / currentSlot;  % calcola il traffico in ingresso, ritrasmissioni incluse
-meanDelay = mean(ackdPacketDelay); 
+meanDelay = mean(ackdPacketDelay);
 throughput = ackdPacketCount / currentSlot;
+pcktCollisionProb = pcktCollisionCount / currentSlot;
