@@ -1,5 +1,10 @@
 function [throughput,meanDelay,trafficOffered,pcktCollisionProb] = saloha(sourcesNumber,packetReadyProb,maxBackoff,simulationTime,showProgressBar)
+%
 % write help here
+%
+% showProgressBar (optional): if true, a progress bar showing the
+%        simulation advance will be displayed. Default behaviour is
+%        showProgressBar = false for faster simulations.
 
 sourceStatus = zeros(1,sourcesNumber);
 % legit source statuses are always non-negative integers and equal to:
@@ -13,18 +18,25 @@ ackdPacketCount = 0;
 pcktCollisionCount = 0; % this is not an output of the function. deletable?
 currentSlot = 0;
 
-h = waitbar(0,'Generating traffic...','CreateCancelBtn','setappdata(gcbf,''canceling'',1)'); % finestra con barra di avanzamento
-setappdata(h,'canceling',0)
+if exist('showProgressBar','var') & showProgressBar == 1
+    showProgressBar = 1;
+    progressBar = waitbar(0,'Generating traffic...','CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+    setappdata(progressBar,'canceling',0);
+else
+    showProgressBar = 0;
+end
 
 while currentSlot < simulationTime
     currentSlot = currentSlot + 1;
 
-    if getappdata(h,'canceling')
-        delete(h);
-        fprintf('Warning: terminated by user!\n');
-        break
+    if showProgressBar == 1
+        if getappdata(progressBar,'canceling')
+            delete(progressBar);
+            fprintf('Warning: terminated by user!\n');
+            break
+        end
+        waitbar(currentSlot / simulationTime,progressBar,sprintf('Packets sent: %u; packets acknowledged: %u.',pcktTransmissionAttempts,ackdPacketCount));
     end
-    waitbar(currentSlot / simulationTime,h,sprintf('Packets sent: %u; packets acknowledged: %u.',pcktTransmissionAttempts,ackdPacketCount));
 
     for eachSource1 = 1:length(sourceStatus)
         if sourceStatus(1,eachSource1) == 0 & rand(1) <= packetReadyProb % new packet
@@ -56,8 +68,8 @@ while currentSlot < simulationTime
     sourceBackoff = zeros(1,sourcesNumber); % inizializzazione del vettore di sourceBackoff prima del nuovo slot
 end
 
-if currentSlot==simulationTime
-    delete(h);
+if currentSlot==simulationTime & showProgressBar == 1
+    delete(progressBar);
 end
 
 trafficOffered = pcktTransmissionAttempts / currentSlot;  % calcola il traffico in ingresso, ritrasmissioni incluse
