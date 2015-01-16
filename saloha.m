@@ -1,4 +1,4 @@
-function [throughput,meanDelay,trafficOffered,pcktCollisionProb] = saloha(sourcesNumber,packetReadyProb,maxBackoff,simulationTime,showProgressBar)
+function [throughput,meanDelay,trafficOffered,pcktCollisionProb] = saloha(sourceNumber,packetReadyProb,maxBackoff,simulationTime,showProgressBar)
 %
 % write help here
 %
@@ -6,12 +6,12 @@ function [throughput,meanDelay,trafficOffered,pcktCollisionProb] = saloha(source
 %        simulation advance will be displayed. Default behaviour is
 %        showProgressBar = false for faster simulations.
 
-sourceStatus = zeros(1,sourcesNumber);
+sourceStatus = zeros(1,sourceNumber);
 % legit source statuses are always non-negative integers and equal to:
 % 0: source has no packet ready to be transmitted (is idle)
 % 1: source has a packet ready to be transmitted, either because new data must be sent or a previously collided packet has waited the backoff time
 % >1: source is backlogged due to previous packets collision, the value of the status equals the number of slots it must wait for the next transmission attempt
-sourceBackoff = zeros(1,sourcesNumber);
+sourceBackoff = zeros(1,sourceNumber);
 pcktTransmissionAttempts = 0;
 ackdPacketDelay = [];
 ackdPacketCount = 0;
@@ -65,7 +65,7 @@ while currentSlot < simulationTime
         end
     end
 
-    sourceBackoff = zeros(1,sourcesNumber); % inizializzazione del vettore di sourceBackoff prima del nuovo slot
+    sourceBackoff = zeros(1,sourceNumber); % inizializzazione del vettore di sourceBackoff prima del nuovo slot
 end
 
 if currentSlot==simulationTime & showProgressBar == 1
