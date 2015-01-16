@@ -1,3 +1,9 @@
+Version 0.2.0:
+ - Merge branch 'add-collisions-to-output' into develop (packet collision probability added to function outputs)
+ - Added collision probability to function outputs
+ - major code cleanup
+ - Matlab script turned into function (file and function name must match)
+
 Version 0.1.0
  - added progress bar
  - basic version of slotted aloha
