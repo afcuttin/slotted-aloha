@@ -1,10 +1,13 @@
-function [throughput,meanDelay,trafficOffered,pcktCollisionProb] = saloha(sourceNumber,packetReadyProb,maxBackoff,simulationTime,showProgressBar)
+function [throughput,meanDelay,trafficOffered,pcktCollisionProb] = saloha(sourceNumber,packetReadyProb,maxBackoff,simulationTime,showProgressBar,niceOutput)
 %
 % write help here
 %
 % showProgressBar (optional): if true, a progress bar showing the
 %        simulation advance will be displayed. Default behaviour is
 %        showProgressBar = false for faster simulations.
+%
+% niceOutput (optional): if true, prints out the function outputs
+%        Default behaviour is niceOutput = false.
 
 sourceStatus = zeros(1,sourceNumber);
 % legit source statuses are always non-negative integers and equal to:
@@ -76,3 +79,7 @@ trafficOffered = pcktTransmissionAttempts / currentSlot;  % calcola il traffico 
 meanDelay = mean(ackdPacketDelay);
 throughput = ackdPacketCount / currentSlot;
 pcktCollisionProb = pcktCollisionCount / currentSlot;
+
+if exist('niceOutput','var') & niceOutput == 1
+    fprintf('\nTraffic offered (G): %.3f,\nThroughput (S): %.3f,\nMean delay (D): %.2f slots,\nCollision probability (P_c): %.3f.\n',trafficOffered,throughput,meanDelay,pcktCollisionProb);
+end
