@@ -82,7 +82,7 @@ while currentSlot < simulationTime
 
     if sum(sourceStatus == 1) == 1
         ackdPacketCount = ackdPacketCount + 1;
-        [dummy,sourceId] = find(sourceStatus == 1);
+        [~,sourceId] = find(sourceStatus == 1);
         ackdPacketDelay(ackdPacketCount) = currentSlot - pcktGenerationTimestamp(sourceId);
     elseif sum(sourceStatus == 1) > 1
         pcktCollisionCount = pcktCollisionCount + 1;
