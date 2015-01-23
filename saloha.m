@@ -42,12 +42,13 @@ sourceStatus = zeros(1,sourceNumber);
 % >1: source is backlogged due to previous packets collision, the value of the status equals the number of slots it must wait for the next transmission attempt
 sourceBackoff = zeros(1,sourceNumber);
 pcktTransmissionAttempts = 0;
-ackdPacketDelay = [];
+ackdPacketDelay = zeros(1,simulationTime);
 ackdPacketCount = 0;
 pcktCollisionCount = 0;
+pcktGenerationTimestamp = zeros(1,sourceNumber);
 currentSlot = 0;
 
-if exist('showProgressBar','var') & showProgressBar == 1
+if exist('showProgressBar','var') && showProgressBar == 1
     showProgressBar = 1;
     progressBar = waitbar(0,'Generating traffic...','CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
     setappdata(progressBar,'canceling',0);
@@ -68,7 +69,7 @@ while currentSlot < simulationTime
     end
 
     for eachSource1 = 1:length(sourceStatus)
-        if sourceStatus(1,eachSource1) == 0 & rand(1) <= packetReadyProb % new packet
+        if sourceStatus(1,eachSource1) == 0 && rand(1) <= packetReadyProb % new packet
             sourceStatus(1,eachSource1) = 1;
             sourceBackoff(1,eachSource1) = randi(maxBackoff,1);
             pcktGenerationTimestamp(1,eachSource1)=currentSlot;
@@ -88,24 +89,20 @@ while currentSlot < simulationTime
         sourceStatus  = sourceStatus + sourceBackoff;
     end
 
-    for eachSource2 = 1:length(sourceStatus) % get rid of these for and if using vector operations
-        if sourceStatus(1,eachSource2) > 0
-            sourceStatus(1,eachSource2) = sourceStatus(1,eachSource2) - 1; % decrementa sourceStatus: chi ha trasmesso passa in idle, chi è backlogged riduce l'attesa fino a quando è di nuovo pronto
-        end
-    end
-
+    sourceStatus = sourceStatus - 1; % decrease backoff interval
+    sourceStatus(sourceStatus < 0) = 0; % idle sources stay idle (see permitted statuses above)
     sourceBackoff = zeros(1,sourceNumber);
 end
 
-if currentSlot==simulationTime & showProgressBar == 1
+if currentSlot == simulationTime && showProgressBar == 1
     delete(progressBar);
 end
 
 trafficOffered = pcktTransmissionAttempts / currentSlot;
-meanDelay = mean(ackdPacketDelay);
+meanDelay = mean(ackdPacketDelay(1:ackdPacketCount));
 throughput = ackdPacketCount / currentSlot;
 pcktCollisionProb = pcktCollisionCount / currentSlot;
 
-if exist('niceOutput','var') & niceOutput == 1
+if exist('niceOutput','var') && niceOutput == 1
     fprintf('\nTraffic offered (G): %.3f,\nThroughput (S): %.3f,\nMean delay (D): %.2f slots,\nCollision probability (P_c): %.3f.\n',trafficOffered,throughput,meanDelay,pcktCollisionProb);
 end
