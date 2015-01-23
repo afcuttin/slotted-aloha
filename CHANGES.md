@@ -1,3 +1,7 @@
+## Version 1.1.0:
+ - CHANGES file renamed and modified into CHANGES.md for Markdown compatibility
+ - Code improved after evaluation with Matlab Profiler
+
 ## Version 1.0.0:
  - Added sample script
  - Detailed help now available
