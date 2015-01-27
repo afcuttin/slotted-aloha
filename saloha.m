@@ -99,7 +99,11 @@ if currentSlot == simulationTime && showProgressBar == 1
 end
 
 trafficOffered = pcktTransmissionAttempts / currentSlot;
-meanDelay = mean(ackdPacketDelay(1:ackdPacketCount));
+if ackdPacketCount == 0
+    meanDelay = simulationTime; % theoretically, if packets collide continously, the delay tends to infinity
+else
+    meanDelay = mean(ackdPacketDelay(1:ackdPacketCount));
+end
 throughput = ackdPacketCount / currentSlot;
 pcktCollisionProb = pcktCollisionCount / currentSlot;
 
