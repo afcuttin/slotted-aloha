@@ -1,3 +1,7 @@
+## Version 1.1.1:
+ - Fixed meanDelay 'NaN' output in case of throughput = 0
+ - There's always something missing after you think you're done :)
+
 ## Version 1.1.0:
  - CHANGES file renamed and modified into CHANGES.md for Markdown compatibility
  - Code improved after evaluation with Matlab Profiler
