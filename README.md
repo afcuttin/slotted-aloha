@@ -1,4 +1,3 @@
-aloha
-=====
+## aloha
 
-Matlab code for Aloha random access protocol simulations
+A Matlab function to simulate the slotted Aloha medium access contro layer.
