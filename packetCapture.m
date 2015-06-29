@@ -5,7 +5,7 @@ function [capturedSource] =  packetCapture(sourceStatus,sourcePower,sourceRho,ca
 % Returns 0 if no capture occurs.
 % If capture occurs, returns the index of sourceStatus corresponding to the source whose packet has been captured
 
-% // TODO add input parameters check
+% TODO: add input parameters check [Issue: https://github.com/afcuttin/aloha/issues/3]
 
 % these parameters can be exposed as function parameters
 pathLossAlpha = 4; % 2 correspond to free space path loss, 4 to cellular environment
