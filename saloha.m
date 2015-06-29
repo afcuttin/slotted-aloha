@@ -35,12 +35,20 @@ function [throughput,meanDelay,trafficOffered,pcktCollisionProb] = saloha(source
 % packet collision probability: probability that a packet collides with others
 %        at any given time slot
 
+% TODO: the capture effect should be available as an input option (capture/no capture, capture threshold, cell radius) [Issue: https://github.com/afcuttin/aloha/issues/4]
+
+captureThreshold = 2;
+cellRadius = 10;
+
 sourceStatus = zeros(1,sourceNumber);
 % legit source statuses are always non-negative integers and equal to:
 % 0: source has no packet ready to be transmitted (is idle)
 % 1: source has a packet ready to be transmitted, either because new data must be sent or a previously collided packet has waited the backoff time
 % >1: source is backlogged due to previous packets collision, the value of the status equals the number of slots it must wait for the next transmission attempt
 sourceBackoff = zeros(1,sourceNumber);
+sourcePower = ones(1,sourceNumber);
+sourceRho = cellRadius * sqrt(rand(1,sourceNumber));
+sourceTheta = 2 * pi * rand(1,sourceNumber);
 pcktTransmissionAttempts = 0;
 ackdPacketDelay = zeros(1,simulationTime);
 ackdPacketCount = 0;
@@ -85,8 +93,16 @@ while currentSlot < simulationTime
         [~,sourceId] = find(sourceStatus == 1);
         ackdPacketDelay(ackdPacketCount) = currentSlot - pcktGenerationTimestamp(sourceId);
     elseif sum(sourceStatus == 1) > 1
-        pcktCollisionCount = pcktCollisionCount + 1;
-        sourceStatus  = sourceStatus + sourceBackoff;
+        capturedPacket = packetCapture(sourceStatus,sourcePower,sourceRho,captureThreshold);
+        if capturedPacket > 0
+            ackdPacketCount = ackdPacketCount + 1
+            ackdPacketDelay(ackdPacketCount) = currentSlot - pcktGenerationTimestamp(capturedPacket);
+            sourceBackoff(capturedPacket) = 0
+            sourceStatus  = sourceStatus + sourceBackoff
+        elseif capturedPacket == 0
+            pcktCollisionCount = pcktCollisionCount + 1
+            sourceStatus  = sourceStatus + sourceBackoff
+        end
     end
 
     sourceStatus = sourceStatus - 1; % decrease backoff interval
